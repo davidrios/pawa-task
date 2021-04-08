@@ -102,7 +102,6 @@ export default {
     border: 1px solid $gray;
     font-size: $font-size;
     margin: 0 0.6rem 0 0;
-    font-family: initial;
 
     &::placeholder {
       color: $gray;

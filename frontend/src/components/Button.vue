@@ -22,7 +22,6 @@ export default {
 .button {
   border: 1px solid $orange;
   background-color: $orange;
-  font-family: initial;
   display: inline-block;
   cursor: pointer;
   color: $white;

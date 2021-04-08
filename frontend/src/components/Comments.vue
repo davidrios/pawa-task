@@ -166,7 +166,6 @@ export default {
   padding: 0.4rem;
   margin: 0;
   font-size: $font-size;
-  font-family: initial;
 
   &--error {
     border: 1px solid $orange;

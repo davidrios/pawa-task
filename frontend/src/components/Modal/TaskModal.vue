@@ -239,7 +239,6 @@ export default {
   margin: 0;
   border: 1px solid $gray;
   font-size: $font-size;
-  font-family: initial;
 
   &--error {
     border: 1px solid $orange;
@@ -257,7 +256,6 @@ export default {
   .input {
     margin: 0 0.6rem 0 0;
     text-align: center;
-    font-family: initial;
 
     &::placeholder {
       color: $gray;
@@ -284,7 +282,6 @@ export default {
   display: block;
   width: 60%;
   font-size: $font-size;
-  font-family: initial;
 
   &--error {
     color: $orange;
