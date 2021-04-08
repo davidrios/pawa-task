@@ -1,32 +1,23 @@
-version: "3.5"
+version: '3.7'
+
+x-env_file:
+  &env_file
+  - ./.env
+
 services:
-  mysql:
-    image: mysql:8
-    environment:
-      MYSQL_DATABASE: pawatask
-      MYSQL_USER: pawa
-      MYSQL_PASSWORD: pawa
-      MYSQL_ROOT_PASSWORD: pawa
   frontend:
-    build: ./frontend
+    build:
+      context: .
+      dockerfile: ./frontend/docker/Dockerfile
+    env_file:
+      *env_file
     volumes:
-      - ./frontend:/usr/frontend
-      - /usr/front/node_modules
+      - ./frontend:/code/frontend
+      - frontend-home:/home/user
     ports:
-      - 8000:8000
-    environment:
-      - PORT=8000
-      - NODE_ENV=development
-  backend:
-    build: .
-    expose:
-      - 8080
-    ports:
-      - 8080:8080
-    depends_on:
-      - mysql
-      - frontend
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql/pawatask?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=pawa
+      - ${APP_PORT}:${APP_PORT}
+    init: true
+    command: ['/code/frontend/docker/scripts/run.sh']
+
+volumes:
+  frontend-home:

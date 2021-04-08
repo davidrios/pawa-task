@@ -1,3 +1,4 @@
+.env
 HELP.md
 /target/
 !.mvn/wrapper/maven-wrapper.jar
@@ -26,7 +27,6 @@ HELP.md
 /build/
 
 ### VS Code ###
-.vscode/
 target/
 pom.xml.tag
 pom.xml.releaseBackup
