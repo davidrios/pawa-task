@@ -1,61 +1,71 @@
 import { parse } from "date-fns";
 
+function genId () {
+  return `${new Date().getTime()}-${(Math.random() * 1000000).toFixed()}`
+}
+
+function getStorageTasks () {
+  return JSON.parse(localStorage.getItem('tasks') || '{}')
+}
+
+function storeTasks (tasks) {
+  localStorage.setItem('tasks', JSON.stringify(tasks))
+}
+
+function dbArrayToObj (arr) {
+  return Object.fromEntries(arr.map(item => [item.id, item]))
+}
+
 export default {
   sortTasks({ state }) {
     state.tasks.sort((a, b) => a.id - b.id);
   },
   async getTasks({ commit, dispatch }) {
-    const response = await fetch("/api/tasks");
-    const tasks = await response.json();
-    if (!response.ok) {
-      console.error(response);
-      return;
-    }
+    const tasks = Object.values(getStorageTasks())
 
-    tasks.forEach(task => (task.dueDate = parse(task.dueDate)));
+    tasks.forEach((task) => {
+      task.comments = Object.values(task.comments || {})
+      task.dueDate = parse(task.dueDate)
+    });
 
     commit("SAVE_TASKS", tasks);
     dispatch("sortTasks");
   },
   async saveTask({ commit, dispatch }, task) {
-    const response = await fetch(`/api/tasks`, {
-      method: "post",
-      body: JSON.stringify(task),
-      headers: { "Content-Type": "application/json" }
-    });
-    if (!response.ok) {
-      console.error(response);
-      return;
-    }
+    const tasks = getStorageTasks()
 
-    const taskNew = await response.json();
-    commit("UPDATE_TASK", taskNew);
+    const storeTask = {
+      ...task,
+      id: genId(),
+      comments: dbArrayToObj(task.comments)
+    }
+    tasks[storeTask.id] = storeTask
+
+    storeTasks(tasks)
+
+    commit("UPDATE_TASK", task);
     dispatch("sortTasks");
   },
   async updateTask({ commit, dispatch }, task) {
-    const response = await fetch(`/api/tasks`, {
-      method: "put",
-      body: JSON.stringify(task),
-      headers: { "Content-Type": "application/json" }
-    });
-    if (!response.ok) {
-      console.error(response);
-      return;
-    }
+    const tasks = getStorageTasks()
 
-    const taskNew = await response.json();
-    commit("UPDATE_TASK", taskNew);
+    const storeTask = {
+      ...task,
+      comments: dbArrayToObj(task.comments)
+    }
+    tasks[storeTask.id] = storeTask
+
+    storeTasks(tasks)
+
+    commit("UPDATE_TASK", task);
     dispatch("sortTasks");
   },
   async deleteTask({ dispatch }, taskId) {
-    const response = await fetch(`/api/tasks/${taskId}`, {
-      method: "delete"
-    });
+    const tasks = getStorageTasks()
 
-    if (!response.ok) {
-      console.error(response);
-      return;
-    }
+    delete tasks[taskId]
+
+    storeTasks(tasks)
 
     dispatch("getTasks");
   },
@@ -65,46 +75,54 @@ export default {
     dispatch("updateTask", task);
   },
   async saveComment({ commit, dispatch }, { taskId, comment }) {
-    const response = await fetch(`/api/tasks/${taskId}/comments`, {
-      method: "post",
-      body: JSON.stringify(comment),
-      headers: { "Content-Type": "application/json" }
-    });
+    const tasks = getStorageTasks()
 
-    if (!response.ok) {
-      console.error(response);
-      return;
+    const task = tasks[taskId]
+    if (task == null) {
+      throw new Error('task not found')
     }
 
-    const task = await response.json();
-    commit("UPDATE_TASK", task);
+    comment = { ...comment, id: genId() }
+
+    if (task.comments == null) {
+      task.comments = {}
+    }
+
+    task.comments[comment.id] = comment
+
+    storeTasks(tasks)
+
+    commit(
+      "UPDATE_TASK",
+      {
+        ...task,
+        comments: Object.values(task.comments)
+      }
+    );
     dispatch("sortTasks");
   },
   async updateComment({ commit, dispatch }, comment) {
-    const response = await fetch(`/api/comments`, {
-      method: "put",
-      body: JSON.stringify(comment),
-      headers: { "Content-Type": "application/json" }
-    });
+    const tasks = getStorageTasks()
 
-    if (!response.ok) {
-      console.error(response);
-      return;
+    for (const task in tasks) {
+      if (task.comments[comment.id] != null) {
+        task.comments[comment.id] = { ...comment }
+      }
     }
 
-    const commentUpdated = await response.json();
-    commit("UPDATE_COMMENT", commentUpdated);
+    storeTasks(tasks)
+
+    commit("UPDATE_COMMENT", comment);
     dispatch("sortTasks");
   },
   async deleteComment({ dispatch }, commentId) {
-    const response = await fetch(`/api/comments/${commentId}`, {
-      method: "delete"
-    });
+    const tasks = getStorageTasks()
 
-    if (!response.ok) {
-      console.error(response);
-      return;
+    for (const task in tasks) {
+      delete (task.comments || {})[commentId]
     }
+
+    storeTasks(tasks)
 
     dispatch("getTasks");
   }
